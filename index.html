@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracking Working Daily</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --nav: #111827;
+      --nav-soft: #374151;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --danger: #ef4444;
+      --danger-soft: #fee2e2;
+      --success: #16a34a;
+      --success-soft: #dcfce7;
+      --warning-soft: #fef3c7;
+      --warning: #92400e;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--nav);
+      color: white;
+      padding: 26px 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .logo {
+      font-size: 23px;
+      font-weight: 850;
+      margin-bottom: 34px;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-btn {
+      width: 100%;
+      border: 0;
+      text-align: left;
+      color: #cbd5e1;
+      background: transparent;
+      padding: 14px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .nav-btn.active, .nav-btn:hover {
+      color: white;
+      background: var(--nav-soft);
+    }
+
+    main { padding: 28px; }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 { font-size: 30px; letter-spacing: -0.04em; margin-bottom: 7px; }
+    h2 { font-size: 20px; letter-spacing: -0.03em; margin-bottom: 16px; }
+    h3 { font-size: 16px; margin-bottom: 8px; }
+
+    .hint { color: var(--muted); line-height: 1.55; }
+
+    .date-pill {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 10px 15px;
+      border-radius: 999px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card, .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 25px rgba(17,24,39,0.04);
+    }
+
+    .metric-card { padding: 18px; }
+    .metric-card p { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .metric-card strong { font-size: 28px; letter-spacing: -0.04em; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+
+    .card { padding: 22px; margin-bottom: 20px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 7px;
+      font-weight: 650;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      padding: 12px 13px;
+      outline: none;
+    }
+
+    textarea { min-height: 82px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+    .btn {
+      border: 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-danger { background: var(--danger-soft); color: #991b1b; }
+    .btn-success { background: var(--success-soft); color: #166534; }
+    .btn-muted { background: #f3f4f6; color: #374151; }
+    .btn-full { flex: 1; }
+
+    .active-task {
+      border: 2px solid var(--primary-soft);
+      background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+    }
+
+    .timer {
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      margin: 12px 0;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 13px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 750; background: #fafafa; }
+
+    .table-wrap { overflow-x: auto; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .badge-a { background: var(--danger-soft); color: #991b1b; }
+    .badge-b { background: var(--primary-soft); color: #1e40af; }
+    .badge-c { background: var(--warning-soft); color: var(--warning); }
+
+    .bar-item { margin-bottom: 14px; }
+    .bar-label { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    .bar-bg { background: #f3f4f6; height: 11px; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .empty {
+      padding: 26px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: #fafafa;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(17,24,39,0.48);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    .modal.open { display: flex; }
+    .modal-box { background: white; width: min(520px, 100%); border-radius: 22px; padding: 24px; }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    @media (max-width: 950px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; padding: 18px; }
+      .logo { margin-bottom: 14px; }
+      .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .nav-btn { margin-bottom: 0; text-align: center; }
+      main { padding: 18px; }
+      .metrics, .grid, .form-grid { grid-template-columns: 1fr; }
+      .full { grid-column: auto; }
+      .topbar { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">Focus Tracker</div>
+      <nav class="nav">
+        <button class="nav-btn active" data-page="today">Today</button>
+        <button class="nav-btn" data-page="log">Log</button>
+        <button class="nav-btn" data-page="dashboard">Dashboard</button>
+        <button class="nav-btn" data-page="settings">Settings</button>
+      </nav>
+    </aside>
+
+    <main>
+      <section id="today" class="page active">
+        <div class="topbar">
+          <div>
+            <h1>Today Log</h1>
+            <p class="hint">Ghi nhanh việc đang làm, thời gian xao nhãng và kết quả trong ngày.</p>
+          </div>
+          <div class="date-pill" id="todayDate"></div>
+        </div>
+
+        <div class="metrics" id="todayMetrics"></div>
+
+        <div class="grid">
+          <div>
+            <div class="card">
+              <h2>Bắt đầu một block công việc</h2>
+              <form id="startForm" class="form-grid">
+                <div class="full">
+                  <label>Công việc đang làm</label>
+                  <input id="taskName" placeholder="Ví dụ: Thiết kế Data Warehouse" required />
+                </div>
+                <div>
+                  <label>Nhóm việc</label>
+                  <select id="taskGroup">
+                    <option value="A">A - Tạo tiền</option>
+                    <option value="B" selected>B - Xây tài sản</option>
+                    <option value="C">C - Vận hành</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Năng lượng</label>
+                  <select id="energy">
+                    <option value="5">5 - Rất tốt</option>
+                    <option value="4" selected>4 - Tốt</option>
+                    <option value="3">3 - Bình thường</option>
+                    <option value="2">2 - Thấp</option>
+                    <option value="1">1 - Rất thấp</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Độ kháng cự</label>
+                  <select id="resistance">
+                    <option value="1">1 - Muốn làm ngay</option>
+                    <option value="2" selected>2 - Bình thường</option>
+                    <option value="3">3 - Hơi ngại</option>
+                    <option value="4">4 - Rất ngại</option>
+                    <option value="5">5 - Né tránh</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Mục tiêu block này</label>
+                  <input id="goal" placeholder="Ví dụ: Xong schema khách hàng" />
+                </div>
+                <div class="full btn-row">
+                  <button class="btn btn-primary btn-full" type="submit">Bắt đầu</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card active-task" id="activeTaskCard"></div>
+
+            <div class="card">
+              <h2>Timeline hôm nay</h2>
+              <div class="table-wrap" id="todayTable"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <h2>Daily Review</h2>
+              <form id="reviewForm">
+                <label>Việc tạo giá trị nhất hôm nay</label>
+                <input id="bestWork" placeholder="Ví dụ: Xong schema Data Warehouse" />
+                <br><br>
+                <label>Điều làm mất thời gian nhất</label>
+                <input id="wasteTime" placeholder="Ví dụ: Chờ AI rồi mở Facebook" />
+                <br><br>
+                <label>Mức hài lòng hôm nay</label>
+                <select id="satisfaction">
+                  <option value="10">10/10</option><option value="9">9/10</option><option value="8" selected>8/10</option><option value="7">7/10</option><option value="6">6/10</option><option value="5">5/10</option><option value="4">4/10</option><option value="3">3/10</option><option value="2">2/10</option><option value="1">1/10</option>
+                </select>
+                <div class="btn-row"><button class="btn btn-primary" type="submit">Lưu review</button></div>
+              </form>
+            </div>
+
+            <div class="card">
+              <h2>Insight hôm nay</h2>
+              <div id="todayInsights" class="hint"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="log" class="page">
+        <div class="topbar">
+          <div>
+            <h1>Log</h1>
+            <p class="hint">Toàn bộ lịch sử block công việc đã ghi.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap" id="allLogTable"></div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="page">
+        <div class="topbar">
+          <div>
+            <h1>Dashboard</h1>
+            <p class="hint">Tổng hợp để nhìn ra mô hình xao nhãng và khung giờ hiệu quả.</p>
+          </div>
+        </div>
+        <div class="metrics" id="dashboardMetrics"></div>
+        <div class="grid">
+          <div class="card">
+            <h2>Giờ làm theo nhóm việc</h2>
+            <div id="groupChart"></div>
+          </div>
+          <div class="card">
+            <h2>Top nguyên nhân xao nhãng</h2>
+            <div id="reasonChart"></div>
+          </div>
+          <div class="card">
+            <h2>Khung giờ dễ xao nhãng</h2>
+            <div id="hourChart"></div>
+          </div>
+          <div class="card">
+            <h2>AI Insight đơn giản</h2>
+            <div id="dashboardInsights" class="hint"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings" class="page">
+        <div class="topbar">
+          <div>
+            <h1>Settings</h1>
+            <p class="hint">Dữ liệu đang lưu trên trình duyệt bằng localStorage.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="settings-row">
+            <div>
+              <h3>Xuất dữ liệu JSON</h3>
+              <p class="hint">Dùng để backup hoặc phân tích sau.</p>
+            </div>
+            <button class="btn btn-muted" id="exportBtn">Export</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <h3>Xóa toàn bộ dữ liệu</h3>
+              <p class="hint">Chỉ xóa dữ liệu trên trình duyệt hiện tại.</p>
+            </div>
+            <button class="btn btn-danger" id="clearBtn">Clear data</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="distractModal">
+    <div class="modal-box">
+      <h2>Ghi nhận xao nhãng</h2>
+      <form id="distractForm" class="form-grid">
+        <div>
+          <label>Nguyên nhân</label>
+          <select id="distractReason">
+            <option>Facebook</option>
+            <option>TikTok</option>
+            <option>YouTube</option>
+            <option>Chat</option>
+            <option>Buồn ngủ</option>
+            <option>Chờ AI</option>
+            <option>Việc quá khó</option>
+            <option>Việc quá chán</option>
+            <option>Nghĩ việc khác</option>
+            <option>Khác</option>
+          </select>
+        </div>
+        <div>
+          <label>Số phút</label>
+          <input id="distractMinutes" type="number" min="1" placeholder="15" required />
+        </div>
+        <div class="full">
+          <label>Ghi chú</label>
+          <textarea id="distractNote" placeholder="Ví dụ: Đang chờ AI chạy nên mở Facebook"></textarea>
+        </div>
+        <div class="full btn-row">
+          <button class="btn btn-primary" type="submit">Lưu xao nhãng</button>
+          <button class="btn btn-muted" type="button" id="closeModalBtn">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'focus-tracker-data-v1';
+
+    const state = loadState();
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { sessions: [], active: null, reviews: {} };
+      try { return JSON.parse(raw); } catch { return { sessions: [], active: null, reviews: {} }; }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function dateKey(d = new Date()) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function timeText(ts) { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+    function minToText(mins) {
+      mins = Math.max(0, Math.round(mins));
+      const h = Math.floor(mins / 60); const m = mins % 60;
+      if (h && m) return `${h}h${m}p`;
+      if (h) return `${h}h`;
+      return `${m}p`;
+    }
+    function durationMinutes(start, end) { return Math.max(0, Math.round((end - start) / 60000)); }
+    function groupName(g) { return g === 'A' ? 'A - Tạo tiền' : g === 'B' ? 'B - Xây tài sản' : 'C - Vận hành'; }
+    function badgeClass(g) { return g === 'A' ? 'badge-a' : g === 'B' ? 'badge-b' : 'badge-c'; }
+
+    function todaySessions() {
+      const key = dateKey();
+      return state.sessions.filter(s => s.date === key);
+    }
+
+    function sessionStats(s) {
+      const end = s.endTime || Date.now();
+      const total = durationMinutes(s.startTime, end);
+      const distract = (s.distractions || []).reduce((sum, d) => sum + Number(d.minutes || 0), 0);
+      const work = Math.max(0, total - distract);
+      return { total, distract, work };
+    }
+
+    function aggregate(sessions) {
+      let total = 0, distract = 0, work = 0;
+      sessions.forEach(s => {
+        const st = sessionStats(s);
+        total += st.total; distract += st.distract; work += st.work;
+      });
+      const score = total ? Math.round((work / total) * 100) : 0;
+      return { total, distract, work, score };
+    }
+
+    function renderMetrics(targetId, items) {
+      document.getElementById(targetId).innerHTML = items.map(item => `
+        <div class="metric-card"><p>${item.label}</p><strong>${item.value}</strong></div>
+      `).join('');
+    }
+
+    function renderToday() {
+      document.getElementById('todayDate').textContent = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+      const sessions = todaySessions();
+      const a = aggregate(sessions.concat(state.active ? [state.active] : []));
+      renderMetrics('todayMetrics', [
+        { label: 'Tổng giờ làm', value: minToText(a.work) },
+        { label: 'Xao nhãng', value: minToText(a.distract) },
+        { label: 'Focus score', value: `${a.score}%` },
+        { label: 'Block hoàn thành', value: sessions.length }
+      ]);
+      renderActiveTask();
+      renderTodayTable();
+      renderTodayInsights();
+      fillReview();
+    }
+
+    function renderActiveTask() {
+      const el = document.getElementById('activeTaskCard');
+      if (!state.active) {
+        el.classList.remove('active-task');
+        el.innerHTML = `<h2>Chưa có block đang chạy</h2><p class="hint">Nhập công việc và bấm <strong>Bắt đầu</strong> để timer chạy.</p>`;
+        return;
+      }
+      el.classList.add('active-task');
+      const st = sessionStats(state.active);
+      el.innerHTML = `
+        <h2>Đang làm: ${escapeHtml(state.active.name)}</h2>
+        <p class="hint">Bắt đầu lúc ${timeText(state.active.startTime)} · ${groupName(state.active.group)} · Mục tiêu: ${escapeHtml(state.active.goal || 'Chưa ghi')}</p>
+        <div class="timer">${minToText(st.total)}</div>
+        <p class="hint">Làm thật: <strong>${minToText(st.work)}</strong> · Xao nhãng: <strong>${minToText(st.distract)}</strong></p>
+        <div class="btn-row">
+          <button class="btn btn-danger" onclick="openDistractModal()">Xao nhãng</button>
+          <button class="btn btn-success" onclick="endSession()">Kết thúc việc</button>
+        </div>
+      `;
+    }
+
+    function renderTodayTable() {
+      const sessions = todaySessions();
+      document.getElementById('todayTable').innerHTML = renderSessionTable(sessions, true);
+    }
+
+    function renderAllLog() {
+      document.getElementById('allLogTable').innerHTML = renderSessionTable([...state.sessions].reverse(), false);
+    }
+
+    function renderSessionTable(sessions, isToday) {
+      if (!sessions.length) return `<div class="empty">${isToday ? 'Hôm nay chưa có log nào.' : 'Chưa có dữ liệu log.'}</div>`;
+      return `
+        <table>
+          <thead><tr><th>Ngày</th><th>Bắt đầu</th><th>Kết thúc</th><th>Công việc</th><th>Nhóm</th><th>Làm thật</th><th>Xao nhãng</th><th>Nguyên nhân</th><th>Kết quả</th></tr></thead>
+          <tbody>
+            ${sessions.map(s => {
+              const st = sessionStats(s);
+              const reasons = (s.distractions || []).map(d => `${escapeHtml(d.reason)} (${d.minutes}p)`).join('<br>') || '-';
+              return `<tr>
+                <td>${s.date}</td><td>${timeText(s.startTime)}</td><td>${s.endTime ? timeText(s.endTime) : '-'}</td>
+                <td>${escapeHtml(s.name)}</td><td><span class="badge ${badgeClass(s.group)}">${s.group}</span></td>
+                <td>${minToText(st.work)}</td><td>${minToText(st.distract)}</td><td>${reasons}</td><td>${escapeHtml(s.result || '')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function renderTodayInsights() {
+      const sessions = todaySessions();
+      const all = sessions.concat(state.active ? [state.active] : []);
+      const reasons = countReasons(all);
+      const topReason = Object.entries(reasons).sort((a,b) => b[1]-a[1])[0];
+      const highestResistance = all.slice().sort((a,b) => Number(b.resistance)-Number(a.resistance))[0];
+      document.getElementById('todayInsights').innerHTML = `
+        <p><strong>Nguyên nhân xao nhãng chính:</strong> ${topReason ? `${topReason[0]} (${topReason[1]} lần)` : 'Chưa có dữ liệu'}.</p>
+        <p><strong>Việc có độ kháng cự cao:</strong> ${highestResistance ? `${escapeHtml(highestResistance.name)} (${highestResistance.resistance}/5)` : 'Chưa có dữ liệu'}.</p>
+        <p><strong>Gợi ý:</strong> Sau mỗi 45-60 phút, chủ động nghỉ 5 phút để tránh xao nhãng lan sang 20-30 phút.</p>
+      `;
+    }
+
+    function renderDashboard() {
+      const sessions = state.sessions;
+      const a = aggregate(sessions);
+      renderMetrics('dashboardMetrics', [
+        { label: 'Tổng giờ làm', value: minToText(a.work) },
+        { label: 'Tổng xao nhãng', value: minToText(a.distract) },
+        { label: 'Focus score', value: `${a.score}%` },
+        { label: 'Tổng block', value: sessions.length }
+      ]);
+      renderBarChart('groupChart', sumByGroup(sessions), 'giờ', 60);
+      renderBarChart('reasonChart', countReasons(sessions), 'lần', 1);
+      renderBarChart('hourChart', countDistractHours(sessions), 'lần', 1);
+      renderDashboardInsights();
+    }
+
+    function renderBarChart(id, data, suffix, divisor) {
+      const entries = Object.entries(data).sort((a,b) => b[1]-a[1]);
+      if (!entries.length) {
+        document.getElementById(id).innerHTML = '<div class="empty">Chưa đủ dữ liệu.</div>';
+        return;
+      }
+      const max = Math.max(...entries.map(e => e[1]), 1);
+      document.getElementById(id).innerHTML = entries.map(([label, value]) => {
+        const display = divisor === 60 ? (value / 60).toFixed(1).replace('.0','') : value;
+        return `<div class="bar-item"><div class="bar-label"><span>${escapeHtml(label)}</span><span>${display} ${suffix}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.max(8, value/max*100)}%"></div></div></div>`;
+      }).join('');
+    }
+
+    function sumByGroup(sessions) {
+      const result = {};
+      sessions.forEach(s => {
+        const label = groupName(s.group);
+        result[label] = (result[label] || 0) + sessionStats(s).work;
+      });
+      return result;
+    }
+
+    function countReasons(sessions) {
+      const result = {};
+      sessions.forEach(s => (s.distractions || []).forEach(d => result[d.reason] = (result[d.reason] || 0) + 1));
+      return result;
+    }
+
+    function countDistractHours(sessions) {
+      const result = {};
+      sessions.forEach(s => (s.distractions || []).forEach(d => {
+        const hour = new Date(d.time || s.startTime).getHours();
+        const label = `${pad(hour)}:00 - ${pad(hour + 1)}:00`;
+        result[label] = (result[label] || 0) + 1;
+      }));
+      return result;
+    }
+
+    function renderDashboardInsights() {
+      const reasons = Object.entries(countReasons(state.sessions)).sort((a,b) => b[1]-a[1]);
+      const hours = Object.entries(countDistractHours(state.sessions)).sort((a,b) => b[1]-a[1]);
+      const resist = state.sessions.slice().sort((a,b) => Number(b.resistance)-Number(a.resistance))[0];
+      document.getElementById('dashboardInsights').innerHTML = `
+        <p><strong>Điểm xao nhãng lặp lại:</strong> ${reasons[0] ? `${reasons[0][0]} là nguyên nhân nhiều nhất.` : 'Chưa đủ dữ liệu.'}</p>
+        <p><strong>Khung giờ cần chú ý:</strong> ${hours[0] ? `${hours[0][0]} có nhiều lần xao nhãng nhất.` : 'Chưa đủ dữ liệu.'}</p>
+        <p><strong>Việc dễ né tránh:</strong> ${resist ? `${escapeHtml(resist.name)} có độ kháng cự ${resist.resistance}/5.` : 'Chưa đủ dữ liệu.'}</p>
+      `;
+    }
+
+    function fillReview() {
+      const review = state.reviews[dateKey()] || {};
+      document.getElementById('bestWork').value = review.bestWork || '';
+      document.getElementById('wasteTime').value = review.wasteTime || '';
+      document.getElementById('satisfaction').value = review.satisfaction || '8';
+    }
+
+    function startSession(e) {
+      e.preventDefault();
+      if (state.active && !confirm('Đang có một block chạy. Kết thúc block cũ và bắt đầu block mới?')) return;
+      if (state.active) finishActiveSession('Tự kết thúc khi bắt đầu block mới');
+      state.active = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        date: dateKey(),
+        name: document.getElementById('taskName').value.trim(),
+        group: document.getElementById('taskGroup').value,
+        energy: document.getElementById('energy').value,
+        resistance: document.getElementById('resistance').value,
+        goal: document.getElementById('goal').value.trim(),
+        startTime: Date.now(),
+        endTime: null,
+        result: '',
+        distractions: []
+      };
+      document.getElementById('startForm').reset();
+      saveState();
+      renderAll();
+    }
+
+    function finishActiveSession(defaultResult = '') {
+      const result = prompt('Kết quả block này là gì?', defaultResult || state.active.goal || '');
+      state.active.endTime = Date.now();
+      state.active.result = result || '';
+      state.sessions.push(state.active);
+      state.active = null;
+    }
+
+    function endSession() {
+      if (!state.active) return;
+      finishActiveSession();
+      saveState();
+      renderAll();
+    }
+
+    function openDistractModal() {
+      if (!state.active) return alert('Chưa có block đang chạy.');
+      document.getElementById('distractModal').classList.add('open');
+      document.getElementById('distractMinutes').focus();
+    }
+
+    function closeDistractModal() {
+      document.getElementById('distractModal').classList.remove('open');
+      document.getElementById('distractForm').reset();
+    }
+
+    function saveDistraction(e) {
+      e.preventDefault();
+      if (!state.active) return;
+      state.active.distractions.push({
+        reason: document.getElementById('distractReason').value,
+        minutes: Number(document.getElementById('distractMinutes').value || 0),
+        note: document.getElementById('distractNote').value.trim(),
+        time: Date.now()
+      });
+      saveState();
+      closeDistractModal();
+      renderAll();
+    }
+
+    function saveReview(e) {
+      e.preventDefault();
+      state.reviews[dateKey()] = {
+        bestWork: document.getElementById('bestWork').value.trim(),
+        wasteTime: document.getElementById('wasteTime').value.trim(),
+        satisfaction: document.getElementById('satisfaction').value
+      };
+      saveState();
+      alert('Đã lưu review hôm nay.');
+    }
+
+    function switchPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === page));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+      if (page === 'log') renderAllLog();
+      if (page === 'dashboard') renderDashboard();
+      if (page === 'today') renderToday();
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `focus-tracker-${dateKey()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearData() {
+      if (!confirm('Xóa toàn bộ dữ liệu trên trình duyệt này?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state.sessions = [];
+      state.active = null;
+      state.reviews = {};
+      renderAll();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+    }
+
+    function renderAll() {
+      renderToday();
+      renderAllLog();
+      renderDashboard();
+    }
+
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => switchPage(btn.dataset.page)));
+    document.getElementById('startForm').addEventListener('submit', startSession);
+    document.getElementById('distractForm').addEventListener('submit', saveDistraction);
+    document.getElementById('closeModalBtn').addEventListener('click', closeDistractModal);
+    document.getElementById('reviewForm').addEventListener('submit', saveReview);
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+    document.getElementById('clearBtn').addEventListener('click', clearData);
+
+    setInterval(() => { if (state.active) renderToday(); }, 30000);
+    renderAll();
+  </script>
+</body>
+</html>
