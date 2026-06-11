@@ -12,8 +12,8 @@
       <div class="logo">Focus Tracker</div>
       <nav class="nav">
         <button class="nav-btn active" data-page="today">Today</button>
-        <button class="nav-btn" data-page="log">Log</button>
         <button class="nav-btn" data-page="dashboard">Dashboard</button>
+        <button class="nav-btn" data-page="log">Log</button>
         <button class="nav-btn" data-page="settings">Settings</button>
       </nav>
     </aside>
@@ -96,20 +96,35 @@
           </div>
         </div>
       </section>
-      <section id="log" class="page">
-        <div class="topbar"><div><h1>Log</h1><p class="hint">Toàn bộ lịch sử block công việc đã ghi.</p></div></div>
-        <div class="card"><div class="table-wrap" id="allLogTable"></div></div>
-      </section>
+
       <section id="dashboard" class="page">
-        <div class="topbar"><div><h1>Dashboard</h1><p class="hint">Tổng hợp để nhìn ra mô hình xao nhãng và phân bổ thời gian.</p></div></div>
+        <div class="topbar"><div><h1>Dashboard</h1><p class="hint">Tổng hợp theo tuần hoặc theo khoảng ngày bạn chọn.</p></div></div>
+        <div class="card">
+          <h2>Bộ lọc thời gian</h2>
+          <form id="dashboardFilterForm" class="form-grid">
+            <div><label>Từ ngày</label><input id="filterStart" type="date" /></div>
+            <div><label>Đến ngày</label><input id="filterEnd" type="date" /></div>
+            <div class="full btn-row">
+              <button class="btn btn-primary" type="submit">Áp dụng</button>
+              <button class="btn btn-muted" type="button" id="last7Btn">7 ngày gần nhất</button>
+              <button class="btn btn-muted" type="button" id="allTimeBtn">Toàn bộ</button>
+            </div>
+          </form>
+        </div>
         <div class="metrics" id="dashboardMetrics"></div>
-        <div class="card"><h2>% phân bổ toàn bộ dữ liệu</h2><div id="dashboardAllocation"></div></div>
+        <div class="card"><h2>% phân bổ thời gian</h2><div id="dashboardAllocation"></div></div>
         <div class="grid">
           <div class="card"><h2>Giờ làm theo nhóm việc</h2><div id="groupChart"></div></div>
           <div class="card"><h2>Top nguyên nhân xao nhãng</h2><div id="reasonChart"></div></div>
           <div class="card"><h2>Insight đơn giản</h2><div id="dashboardInsights" class="hint"></div></div>
         </div>
       </section>
+
+      <section id="log" class="page">
+        <div class="topbar"><div><h1>Log</h1><p class="hint">Toàn bộ lịch sử block công việc đã ghi.</p></div></div>
+        <div class="card"><div class="table-wrap" id="allLogTable"></div></div>
+      </section>
+
       <section id="settings" class="page">
         <div class="topbar"><div><h1>Settings</h1><p class="hint">Dữ liệu đang lưu trên trình duyệt bằng localStorage.</p></div></div>
         <div class="card">
@@ -125,12 +140,14 @@
           </form>
         </div>
         <div class="card">
-          <div class="settings-row"><div><h3>Xuất dữ liệu JSON</h3><p class="hint">Dùng để backup hoặc phân tích sau.</p></div><button class="btn btn-muted" id="exportBtn">Export</button></div>
+          <div class="settings-row"><div><h3>Xuất dữ liệu JSON</h3><p class="hint">Dùng để backup hoặc nhập sang hệ thống khác.</p></div><button class="btn btn-muted" id="exportBtn">Export JSON</button></div>
+          <div class="settings-row"><div><h3>Xuất Excel/CSV</h3><p class="hint">Mở được bằng Excel hoặc Google Sheets.</p></div><button class="btn btn-muted" id="exportCsvBtn">Export CSV</button></div>
           <div class="settings-row"><div><h3>Xóa toàn bộ dữ liệu</h3><p class="hint">Chỉ xóa dữ liệu trên trình duyệt hiện tại.</p></div><button class="btn btn-danger" id="clearBtn">Clear data</button></div>
         </div>
       </section>
     </main>
   </div>
+
   <div class="modal" id="distractModal">
     <div class="modal-box">
       <h2>Ghi nhận xao nhãng</h2>
@@ -142,6 +159,18 @@
       </form>
     </div>
   </div>
+
+  <div class="modal" id="endModal">
+    <div class="modal-box">
+      <h2>Kết thúc block</h2>
+      <form id="endForm" class="form-grid">
+        <div class="full"><label>Kết quả block này</label><textarea id="endResult" placeholder="Ví dụ: Xong phần mapping dữ liệu"></textarea></div>
+        <div class="full"><label>Giá trị tạo ra</label><select id="valueLevel"><option value="Cao">Cao</option><option value="Trung bình" selected>Trung bình</option><option value="Thấp">Thấp</option></select></div>
+        <div class="full btn-row"><button class="btn btn-success" type="submit">Lưu & kết thúc</button><button class="btn btn-muted" type="button" id="cancelEndBtn">Hủy</button></div>
+      </form>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
