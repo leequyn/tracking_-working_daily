@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS = { moneyPrefixes: ['AFF', 'SI', 'GT'], opsPrefixes: ['CH
 let state = loadState();
 let dashboardFilter = { mode: 'last7', start: '', end: '' };
 let currentPage = 'today';
+let currentLogTab = 'blocks';
 ensureState();
 
 function fallbackState() {
@@ -375,6 +376,26 @@ function renderTable(id, list, isToday) {
   }).join('')}</tbody></table>`;
 }
 
+function renderDailyReviewTable() {
+  const rows = Object.entries(state.reviews || {})
+    .filter(([, review]) => review && (review.createdToday || review.wasteTime || review.tomorrowChange || review.satisfaction))
+    .sort((a, b) => b[0].localeCompare(a[0]));
+  if (!rows.length) {
+    document.getElementById('dailyReviewTable').innerHTML = '<div class="empty">Chưa có Daily Review nào.</div>';
+    return;
+  }
+  document.getElementById('dailyReviewTable').innerHTML = `<table><thead><tr><th>Ngày</th><th>Thứ đã tạo ra</th><th>Mất thời gian nhất</th><th>Muốn thay đổi ngày mai</th><th>Hài lòng</th></tr></thead><tbody>${rows.map(([date, review]) => `<tr><td>${esc(date)}</td><td>${esc(review.createdToday || review.bestWork || '')}</td><td>${esc(review.wasteTime || '')}</td><td>${esc(review.tomorrowChange || '')}</td><td>${esc(review.satisfaction ? `${review.satisfaction}/10` : '-')}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function switchLogTab(tab) {
+  currentLogTab = tab;
+  document.querySelectorAll('.subnav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.logTab === tab));
+  document.getElementById('blocksLogPanel').classList.toggle('active', tab === 'blocks');
+  document.getElementById('reviewsLogPanel').classList.toggle('active', tab === 'reviews');
+  if (tab === 'blocks') renderTable('allLogTable', [...state.sessions].reverse(), false);
+  if (tab === 'reviews') renderDailyReviewTable();
+}
+
 function renderInsight() {
   document.getElementById('todayInsights').innerHTML = '<p><strong>Gợi ý:</strong> Dùng nút nghỉ nhanh khi nghỉ chủ động để không lẫn với xao nhãng.</p><p><strong>Cuối block:</strong> Ghi ngắn kết quả và chọn mức giá trị để sau này nhìn ra việc nào đáng ưu tiên.</p>';
 }
@@ -620,7 +641,7 @@ function switchPage(page) {
   currentPage = page;
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === page));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
-  if (page === 'log') renderTable('allLogTable', [...state.sessions].reverse(), false);
+  if (page === 'log') switchLogTab(currentLogTab);
   if (page === 'dashboard') renderDashboard();
   if (page === 'settings') fillSettings();
   if (page === 'today') renderToday();
@@ -667,11 +688,13 @@ function clearData() {
 function renderAll() {
   renderToday();
   renderTable('allLogTable', [...state.sessions].reverse(), false);
+  renderDailyReviewTable();
   renderDashboard();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => switchPage(btn.dataset.page)));
+  document.querySelectorAll('.subnav-btn').forEach(btn => btn.addEventListener('click', () => switchLogTab(btn.dataset.logTab)));
   startForm.addEventListener('submit', startSession);
   distractForm.addEventListener('submit', saveDistraction);
   closeModalBtn.addEventListener('click', closeDistract);

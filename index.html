@@ -126,8 +126,17 @@
       </section>
 
       <section id="log" class="page">
-        <div class="topbar"><div><h1>Log</h1><p class="hint">Toàn bộ lịch sử block công việc đã ghi.</p></div></div>
-        <div class="card"><div class="table-wrap" id="allLogTable"></div></div>
+        <div class="topbar"><div><h1>Log</h1><p class="hint">Lịch sử block công việc và Daily Review theo ngày.</p></div></div>
+        <div class="subnav">
+          <button class="subnav-btn active" data-log-tab="blocks">Block history</button>
+          <button class="subnav-btn" data-log-tab="reviews">Daily reviews</button>
+        </div>
+        <div class="log-panel active" id="blocksLogPanel">
+          <div class="card"><div class="table-wrap" id="allLogTable"></div></div>
+        </div>
+        <div class="log-panel" id="reviewsLogPanel">
+          <div class="card"><div class="table-wrap" id="dailyReviewTable"></div></div>
+        </div>
       </section>
 
       <section id="settings" class="page">
