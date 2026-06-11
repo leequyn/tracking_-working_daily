@@ -505,14 +505,20 @@ function saveDistraction(e) {
 
 function fillReview() {
   const r = state.reviews[dateKey()] || {};
-  bestWork.value = r.bestWork || '';
+  createdToday.value = r.createdToday || r.bestWork || '';
   wasteTime.value = r.wasteTime || '';
+  tomorrowChange.value = r.tomorrowChange || '';
   satisfaction.value = r.satisfaction || '8';
 }
 
 function saveReview(e) {
   e.preventDefault();
-  state.reviews[dateKey()] = { bestWork: bestWork.value.trim(), wasteTime: wasteTime.value.trim(), satisfaction: satisfaction.value };
+  state.reviews[dateKey()] = {
+    createdToday: createdToday.value.trim(),
+    wasteTime: wasteTime.value.trim(),
+    tomorrowChange: tomorrowChange.value.trim(),
+    satisfaction: satisfaction.value
+  };
   save();
   alert('Đã lưu review hôm nay.');
 }
