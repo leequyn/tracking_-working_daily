@@ -1,7 +1,7 @@
 const KEY = 'focus-tracker-data-v4';
 const OLD = ['focus-tracker-data-v3', 'focus-tracker-data-v2', 'focus-tracker-data-v1'];
 const USER_ID = 'leequyn';
-const SUPABASE_URL = 'https://yduzszsyrbbugjmlrceh.supabase.co';
+const SUPABASE_URL = 'https://yduzszsybrbugjmlrceh.supabase.co';
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || localStorage.getItem('supabase-anon-key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkdXpzenN5YnJidWdqbWxyY2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNDcxNjAsImV4cCI6MjA5NjcyMzE2MH0.x80POR0U86eaNXfKGVeD6axkfdFgW3H0b85GEBEZUjA';
 const DEFAULT_SETTINGS = { moneyPrefixes: ['AFF', 'SI', 'GT'], opsPrefixes: ['CHECK', 'MEET', 'OPS'] };
 
