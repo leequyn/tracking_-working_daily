@@ -86,6 +86,12 @@ function dateKey(d = new Date()) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+function addDays(d, days) {
+  const next = new Date(d);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
 function timeText(ts) {
   const d = new Date(ts);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -179,13 +185,47 @@ function rowToSession(row) {
   };
 }
 
-async function loadRemoteSessions() {
+function reviewToRow(reviewDate, review) {
+  return {
+    user_id: USER_ID,
+    review_date: reviewDate,
+    created_today: review.createdToday || '',
+    waste_time: review.wasteTime || '',
+    tomorrow_change: review.tomorrowChange || '',
+    satisfaction: Number(review.satisfaction || 0),
+    updated_at: new Date().toISOString()
+  };
+}
+
+function rowToReview(row) {
+  return {
+    createdToday: row.created_today || '',
+    wasteTime: row.waste_time || '',
+    tomorrowChange: row.tomorrow_change || '',
+    satisfaction: row.satisfaction ? String(row.satisfaction) : '8'
+  };
+}
+
+async function fetchRemoteSessions() {
+  const rows = await supabaseRequest(`sessions?user_id=eq.${encodeURIComponent(USER_ID)}&select=*&order=start_time.asc`);
+  const remoteSessions = rows.map(rowToSession);
+  state.sessions = remoteSessions.filter(s => s.endTime);
+  state.active = remoteSessions.find(s => !s.endTime) || null;
+}
+
+async function fetchRemoteReviews() {
+  const rows = await supabaseRequest(`daily_reviews?user_id=eq.${encodeURIComponent(USER_ID)}&select=*&order=review_date.asc`);
+  state.reviews = rows.reduce((acc, row) => {
+    acc[row.review_date] = rowToReview(row);
+    return acc;
+  }, {});
+}
+
+async function loadRemoteData() {
   setSyncStatus('syncing');
   try {
-    const rows = await supabaseRequest(`sessions?user_id=eq.${encodeURIComponent(USER_ID)}&select=*&order=start_time.asc`);
-    const remoteSessions = rows.map(rowToSession);
-    state.sessions = remoteSessions.filter(s => s.endTime);
-    state.active = remoteSessions.find(s => !s.endTime) || null;
+    await fetchRemoteSessions();
+    await fetchRemoteReviews();
     save();
     renderAll();
     setSyncStatus('synced');
@@ -231,6 +271,21 @@ async function updateRemoteSession(session) {
   }
 }
 
+async function upsertRemoteReview(reviewDate, review) {
+  setSyncStatus('syncing');
+  try {
+    await supabaseRequest('daily_reviews?on_conflict=user_id,review_date', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify(reviewToRow(reviewDate, review))
+    });
+    setSyncStatus('synced');
+  } catch (error) {
+    console.error('Supabase review upsert failed:', error);
+    setSyncStatus('error');
+  }
+}
+
 function aggregate(list) {
   let total = 0;
   let distract = 0;
@@ -269,6 +324,7 @@ function renderAllocation(id, list) {
 
 function renderToday() {
   document.getElementById('todayDate').textContent = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+  renderTomorrowReminder();
   document.getElementById('prefixHelp').innerHTML = `<strong>Tự phân loại bằng tiền tố:</strong> ${state.settings.moneyPrefixes.join(' / ')} = Tạo tiền · ${state.settings.opsPrefixes.join(' / ')} = Vận hành. Không nhập hoặc không khớp thì mặc định Xây tài sản.`;
   const list = todaySessions();
   const all = list.concat(state.active ? [state.active] : []);
@@ -284,6 +340,13 @@ function renderToday() {
   renderTable('todayTable', list, true);
   renderInsight();
   fillReview();
+}
+
+function renderTomorrowReminder() {
+  const el = document.getElementById('tomorrowReminder');
+  const yesterday = dateKey(addDays(new Date(), -1));
+  const reminder = state.reviews[yesterday]?.tomorrowChange?.trim();
+  el.innerHTML = reminder ? `<div class="tomorrow-reminder"><strong>Nhắc nhở từ review hôm qua</strong><p>${esc(reminder)}</p></div>` : '';
 }
 
 function renderActive() {
@@ -511,15 +574,19 @@ function fillReview() {
   satisfaction.value = r.satisfaction || '8';
 }
 
-function saveReview(e) {
+async function saveReview(e) {
   e.preventDefault();
-  state.reviews[dateKey()] = {
+  const reviewDate = dateKey();
+  const review = {
     createdToday: createdToday.value.trim(),
     wasteTime: wasteTime.value.trim(),
     tomorrowChange: tomorrowChange.value.trim(),
     satisfaction: satisfaction.value
   };
+  state.reviews[reviewDate] = review;
   save();
+  renderTomorrowReminder();
+  await upsertRemoteReview(reviewDate, review);
   alert('Đã lưu review hôm nay.');
 }
 
@@ -622,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupAutocomplete();
   renderAll();
   fillSettings();
-  loadRemoteSessions();
+  loadRemoteData();
   setInterval(() => {
     if (state.active && currentPage === 'today') renderToday();
   }, 10000);
