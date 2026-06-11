@@ -5,7 +5,7 @@ Dùng để tracking hiệu suất làm việc
 
 App đọc/ghi bảng `sessions` trên Supabase project `https://yduzszsyrbbugjmlrceh.supabase.co`.
 
-Cần inject public anon key trước `app.js`, ví dụ:
+Public anon key đã được cấu hình mặc định trong `app.js`. Có thể override trước `app.js` nếu cần đổi project/key:
 
 ```html
 <script>
